@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaBload</title>
+</head>
+<body>
+
+    <h2>MetaBload</h2>
+
+    <form id="uploadForm" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
+        <input type="file" name="fileInput" id="fileInput" />
+        <input type="submit" value="Upload File" />
+    </form>
+
+    <div id="fileLink" style="display:none;">
+        <p>File uploaded successfully! Here is the link:</p>
+        <a id="downloadLink" href="#" target="_blank"></a>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+
+            if (file) {
+                var formData = new FormData();
+                formData.append('fileInput', file);
+
+                // Sending the file to the server using AJAX
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '<?php echo $_SERVER['PHP_SELF']; ?>', true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            displayFileLink(response.fileLink);
+                        } else {
+                            alert('Error: ' + response.error);
+                        }
+                    }
+                };
+                xhr.send(formData);
+            }
+        });
+
+        function displayFileLink(fileLink) {
+            var fileLinkDiv = document.getElementById('fileLink');
+            var downloadLink = document.getElementById('downloadLink');
+
+            downloadLink.href = 'http://' + fileLink;
+            downloadLink.textContent = fileLink;
+
+            fileLinkDiv.style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>
