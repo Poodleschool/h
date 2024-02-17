@@ -1,19 +1,3 @@
-<?php
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["fileInput"])) {
-    $uploadDir = 'uploads/';
-    $uploadedFile = $uploadDir . basename($_FILES['fileInput']['name']);
-
-    if (move_uploaded_file($_FILES['fileInput']['tmp_name'], $uploadedFile)) {
-        $fileLink = $_SERVER['HTTP_HOST'] . '/' . $uploadedFile;
-        echo json_encode(['success' => true, 'fileLink' => $fileLink]);
-        exit;
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Error uploading the file.']);
-        exit;
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,10 +9,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["fileInput"])) {
 
     <h2>File Upload</h2>
 
-    <form id="uploadForm" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
-        <input type="file" name="fileInput" id="fileInput" />
-        <input type="submit" value="Upload File" />
-    </form>
+    <input type="file" name="fileInput" id="fileInput" />
+
+    <button onclick="uploadFile()">Upload File</button>
 
     <div id="fileLink" style="display:none;">
         <p>File uploaded successfully! Here is the link:</p>
@@ -36,38 +19,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["fileInput"])) {
     </div>
 
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            var fileInput = document.getElementById('fileInput');
-            var file = fileInput.files[0];
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
 
             if (file) {
-                var formData = new FormData();
+                const formData = new FormData();
                 formData.append('fileInput', file);
 
-                // Sending the file to the server using AJAX
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', '<?php echo $_SERVER['PHP_SELF']; ?>', true);
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        var response = JSON.parse(xhr.responseText);
-                        if (response.success) {
-                            displayFileLink(response.fileLink);
-                        } else {
-                            alert('Error: ' + response.error);
-                        }
+                fetch('/.netlify/functions/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayFileLink(data.fileLink);
+                    } else {
+                        alert('Error uploading the file.');
                     }
-                };
-                xhr.send(formData);
+                })
+                .catch(error => {
+                    console.error('Error uploading the file.', error);
+                });
             }
-        });
+        }
 
         function displayFileLink(fileLink) {
-            var fileLinkDiv = document.getElementById('fileLink');
-            var downloadLink = document.getElementById('downloadLink');
+            const fileLinkDiv = document.getElementById('fileLink');
+            const downloadLink = document.getElementById('downloadLink');
 
-            downloadLink.href = 'http://' + fileLink;
+            downloadLink.href = fileLink;
             downloadLink.textContent = fileLink;
 
             fileLinkDiv.style.display = 'block';
