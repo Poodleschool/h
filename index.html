@@ -1,13 +1,29 @@
+<?php
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["fileInput"])) {
+    $uploadDir = 'uploads/';
+    $uploadedFile = $uploadDir . basename($_FILES['fileInput']['name']);
+
+    if (move_uploaded_file($_FILES['fileInput']['tmp_name'], $uploadedFile)) {
+        $fileLink = $_SERVER['HTTP_HOST'] . '/' . $uploadedFile;
+        echo json_encode(['success' => true, 'fileLink' => $fileLink]);
+        exit;
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Error uploading the file.']);
+        exit;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaBload</title>
+    <title>File Upload Example</title>
 </head>
 <body>
 
-    <h2>MetaBload</h2>
+    <h2>File Upload</h2>
 
     <form id="uploadForm" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
         <input type="file" name="fileInput" id="fileInput" />
